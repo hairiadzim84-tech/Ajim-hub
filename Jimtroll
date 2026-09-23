@@ -1,0 +1,95 @@
+-- JIMHUB FLING LANGSUNG
+if _G.JimHubFling then return end
+_G.JimHubFling = true
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local Mouse = Player:GetMouse()
+local Character, Root
+
+local Settings = {Active=false, Auto=false, Power=800}
+
+Player.CharacterAdded:Connect(function()
+    repeat task.wait() until Player.Character
+    Character = Player.Character
+    Root = Character:FindFirstChild("HumanoidRootPart")
+end)
+if Player.Character then
+    Character = Player.Character
+    Root = Character:FindFirstChild("HumanoidRootPart")
+end
+
+local function Fling(Char)
+    if not Root or not Char then return end
+    local TR = Char:FindFirstChild("HumanoidRootPart")
+    if not TR then return end
+    local BV = Instance.new("BodyVelocity")
+    BV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    BV.Velocity = (TR.Position - Root.Position).Unit * Settings.Power + Vector3.new(0, 600, 0)
+    BV.Parent = TR
+    game.Debris:AddItem(BV, 0.3)
+end
+
+Mouse.Button1Down:Connect(function()
+    if not Settings.Active or not Mouse.Target then return end
+    local P = Players:GetPlayerFromCharacter(Mouse.Target.Parent)
+    if P and P ~= Player then Fling(P.Character) end
+end)
+
+task.spawn(function()
+    while task.wait(0.6) and _G.JimHubFling do
+        if Settings.Auto and Settings.Active then
+            for _,p in next, Players:GetPlayers() do
+                if p~=Player and p.Character then Fling(p.Character) end
+            end
+        end
+    end
+end)
+
+-- UI
+local G = Instance.new("ScreenGui")
+G.Parent = game.CoreGui
+G.Name = "JimHubFling"
+
+local F = Instance.new("Frame")
+F.Size = UDim2.new(0,260,0,280)
+F.Position = UDim2.new(0.02,0,0.5,-140)
+F.BackgroundColor3 = Color3.fromRGB(255,255,255)
+F.BorderSizePixel = 2
+F.Active = true
+F.Draggable = true
+F.Parent = G
+
+local T = Instance.new("TextLabel")
+T.Size = UDim2.new(1,0,0,45)
+T.BackgroundColor3 = Color3.fromRGB(60,60,60)
+T.Text = "🎮 JIMHUB FLING"
+T.TextColor3 = Color3.fromRGB(255,255,255)
+T.Font = Enum.Font.GothamBold
+T.TextSize = 16
+T.Parent = F
+
+local function Btn(nm, pos, f)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0.9,0,0,40)
+    b.Position = UDim2.new(0.05,0,0,pos)
+    b.BackgroundColor3 = Color3.fromRGB(220,220,220)
+    b.Text = nm
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 13
+    b.Parent = F
+    b.MouseButton1Click:Connect(f)
+    return b
+end
+
+local b1 = Btn("🔘 Fling: OFF", 60, function()
+    Settings.Active = not Settings.Active
+    b1.Text = Settings.Active and "🟢 Fling: ON" or "🔘 Fling: OFF"
+end)
+
+local b2 = Btn("🔘 Auto: OFF", 110, function()
+    Settings.Auto = not Settings.Auto
+    b2.Text = Settings.Auto and "🟢 Auto: ON" or "🔘 Auto: OFF"
+end)
+
+Btn("❌ TUTUP", 170, function() _G.JimHubFling=false; G:Destroy() end)
